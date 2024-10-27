@@ -4,11 +4,47 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class Calc extends StatefulWidget {
-  const Calc({super.key});
+  final Function changeTheme;
+  final ThemeMode theme;
+  const Calc({super.key, required this.theme, required this.changeTheme});
 
   @override
   State<Calc> createState() => _CalcScreen();
 }
+
+Map<String, Color> darkTheme = {
+  'background': Colors.black,
+  'homeRow': Colors.white30,
+  'sideRow': Colors.orange,
+  'btn_bg': Colors.white10,
+  'btn_fg': Colors.white,
+};
+
+Map<String, Color> lightTheme = {
+  'background': Colors.white,
+  'homeRow': Colors.black54,
+  'sideRow': Colors.orange,
+  'btn_bg': Colors.black38,
+  'btn_fg': Colors.black87,
+};
+
+ThemeData light = ThemeData(
+    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+    useMaterial3: true,
+    primaryColor: Colors.white54,
+    hintColor: Colors.orange,
+    canvasColor: Colors.black38,
+    focusColor: Colors.black87,
+    scaffoldBackgroundColor: Colors.white);
+
+ThemeData dark = ThemeData(
+    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
+    useMaterial3: true,
+    primaryColor: Colors.white30,
+    hintColor: Colors.orange,
+    canvasColor: Colors.white10,
+    focusColor: Colors.white,
+    scaffoldBackgroundColor: Colors.white);
 
 Color numColor = Colors.white10;
 Color homeRowColor = Colors.white30;
@@ -67,6 +103,11 @@ class _CalcScreen extends State<Calc> {
         space = '';
         input = eval.toString();
         operator = CupertinoIcons.equal_circle_fill;
+      });
+    } else if (input.isEmpty && space.isNotEmpty) {
+      setState(() {
+        input = space;
+        space = '';
       });
     } else {
       ScaffoldMessenger.of(context)
@@ -136,6 +177,23 @@ class _CalcScreen extends State<Calc> {
     return Center(
       child: Column(
         children: [
+          const SizedBox(
+            height: 20,
+          ),
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+            Switch(
+                value: widget.theme == ThemeMode.dark,
+                activeColor: Colors.amber,
+                inactiveThumbColor: Colors.white,
+                inactiveTrackColor: sideColor,
+                activeTrackColor: Colors.black,
+                splashRadius: 20,
+                trackOutlineColor: const WidgetStatePropertyAll(
+                    Color.fromARGB(139, 255, 255, 255)),
+                onChanged: (bool value) {
+                  widget.changeTheme();
+                }),
+          ]),
           Expanded(
             child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -145,16 +203,16 @@ class _CalcScreen extends State<Calc> {
                     Row(
                       children: [
                         Expanded(
-                          child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              reverse: true,
-                              child: Text(
-                                space,
-                                textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                    fontSize: 30, color: Colors.white70),
+                            child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          reverse: true,
+                          child: Text(space,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 30,
+                                color: Theme.of(context).primaryColor,
                               )),
-                        )
+                        ))
                       ],
                     ),
                     Row(
@@ -162,19 +220,19 @@ class _CalcScreen extends State<Calc> {
                       children: [
                         Icon(
                           operator,
-                          color: Colors.white,
+                          color: Theme.of(context).focusColor,
                           size: 50,
                         ),
                         Expanded(
                             child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           reverse: true,
-                          child: Text(
-                            input,
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                                fontSize: resFont, color: Colors.white),
-                          ),
+                          child: Text(input,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: resFont,
+                                color: Theme.of(context).focusColor,
+                              )),
                         ))
                       ],
                     ),
@@ -187,22 +245,22 @@ class _CalcScreen extends State<Calc> {
               Button(
                   content: "",
                   label: buttonText("AC"),
-                  bg: homeRowColor,
+                  bg: Theme.of(context).primaryColor,
                   onClick: clearInput),
               Button(
                   content: "",
                   label: buttonIcon(CupertinoIcons.delete_left),
-                  bg: homeRowColor,
+                  bg: Theme.of(context).primaryColor,
                   onClick: backSpace),
               Button(
                   content: "",
                   label: buttonText("%"),
-                  bg: homeRowColor,
+                  bg: Theme.of(context).primaryColor,
                   onClick: onChange),
               Button(
                   content: "/",
                   label: buttonIcon(CupertinoIcons.divide),
-                  bg: sideColor,
+                  bg: Theme.of(context).hintColor,
                   onClick: operatorSwitch),
             ],
           ),
@@ -212,22 +270,22 @@ class _CalcScreen extends State<Calc> {
               Button(
                   content: "7",
                   label: buttonText("7"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "8",
                   label: buttonText("8"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "9",
                   label: buttonText("9"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "X",
                   label: buttonIcon(CupertinoIcons.multiply),
-                  bg: sideColor,
+                  bg: Theme.of(context).hintColor,
                   onClick: operatorSwitch),
             ],
           ),
@@ -237,22 +295,22 @@ class _CalcScreen extends State<Calc> {
               Button(
                   content: "4",
                   label: buttonText("4"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "5",
                   label: buttonText("5"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "6",
                   label: buttonText("6"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "-",
                   label: buttonIcon(CupertinoIcons.minus),
-                  bg: sideColor,
+                  bg: Theme.of(context).hintColor,
                   onClick: operatorSwitch),
             ],
           ),
@@ -262,22 +320,22 @@ class _CalcScreen extends State<Calc> {
               Button(
                   content: "1",
                   label: buttonText("1"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "2",
                   label: buttonText("2"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "3",
                   label: buttonText("3"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "+",
                   label: buttonIcon(CupertinoIcons.add),
-                  bg: sideColor,
+                  bg: Theme.of(context).hintColor,
                   onClick: operatorSwitch)
             ],
           ),
@@ -287,22 +345,22 @@ class _CalcScreen extends State<Calc> {
               Button(
                   content: "",
                   label: buttonIcon(Icons.calculate_rounded),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "0",
                   label: buttonText("0"),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: ".",
                   label: buttonText("."),
-                  bg: numColor,
+                  bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
                   content: "",
                   label: buttonIcon(CupertinoIcons.equal),
-                  bg: sideColor,
+                  bg: Theme.of(context).hintColor,
                   onClick: evaluate)
             ],
           ),
@@ -314,11 +372,11 @@ class _CalcScreen extends State<Calc> {
   Widget buttonText(String label) {
     return Text(
       label,
-      style: const TextStyle(fontSize: 30, color: Colors.white),
+      style: TextStyle(fontSize: 30, color: Theme.of(context).focusColor),
     );
   }
 
   Widget buttonIcon(IconData icon) {
-    return Icon(icon, color: Colors.white, size: 40);
+    return Icon(icon, color: Theme.of(context).focusColor, size: 40);
   }
 }
