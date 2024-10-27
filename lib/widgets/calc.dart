@@ -24,19 +24,29 @@ Map<String, IconData> operatorMap = {
 class _CalcScreen extends State<Calc> {
   String input = '';
   String space = '';
-  IconData operator = CupertinoIcons.alt;
+  IconData operator = initialIcon;
+  double resFont = 50;
 
   void onChange(String value) {
-    if (input.length < limitLength) {
-      setState(() {
-        input += value;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-        "Length Limit $limitLength!",
-      )));
-    }
+    // if (input.isNotEmpty) {
+    //   setState(() {
+    //     input += value;
+    //     resFont -= 2;
+    //   });
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    //       content: Text(
+    //     "Length Limit $limitLength!",
+    //   )));
+    // }
+    setState(() {
+      input += value;
+      if (7 < input.length && input.length < 15) {
+        resFont -= 2;
+      } else if (input.length <= 7) {
+        resFont = 50;
+      }
+    });
   }
 
   void clearInput(String value) {
@@ -44,7 +54,7 @@ class _CalcScreen extends State<Calc> {
   }
 
   void evaluate(String value) {
-    if (input != '') {
+    if (input != '' && operator != initialIcon) {
       Map<IconData, num> operations = {
         operatorMap['+']!: num.parse(space) + num.parse(input),
         operatorMap['-']!: num.parse(space) - num.parse(input),
@@ -134,12 +144,15 @@ class _CalcScreen extends State<Calc> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            space,
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(
-                                fontSize: 30, color: Colors.white70),
-                          ),
+                          child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              reverse: true,
+                              child: Text(
+                                space,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                    fontSize: 30, color: Colors.white70),
+                              )),
                         )
                       ],
                     ),
@@ -152,13 +165,16 @@ class _CalcScreen extends State<Calc> {
                           size: 50,
                         ),
                         Expanded(
+                            child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          reverse: true,
                           child: Text(
                             input,
                             textAlign: TextAlign.right,
-                            style: const TextStyle(
-                                fontSize: 50, color: Colors.white),
+                            style: TextStyle(
+                                fontSize: resFont, color: Colors.white),
                           ),
-                        )
+                        ))
                       ],
                     ),
                   ],

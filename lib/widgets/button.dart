@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-const double size = 80;
-
 class Button extends StatelessWidget {
   final Widget label;
   final Color bg;
@@ -16,17 +14,21 @@ class Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        onClick(content);
-      },
-      child: Container(
-        width: size,
-        height: size,
-        margin: const EdgeInsets.all(5),
-        decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-        child: Center(child: label),
-      ),
-    );
+    final double size = MediaQuery.of(context).size.width / 4.5;
+
+    return Padding(
+        padding: const EdgeInsets.all(3),
+        child: InkWell(
+          onTap: () {
+            onClick(content);
+          },
+          borderRadius: const BorderRadius.all(Radius.circular(50)),
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+            child: Center(child: label),
+          ),
+        ));
   }
 }
