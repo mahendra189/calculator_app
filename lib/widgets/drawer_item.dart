@@ -10,6 +10,7 @@ class DrawerItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        Scaffold.of(context).closeDrawer();
         onClick!();
       },
       child: Padding(
@@ -22,13 +23,13 @@ class DrawerItem extends StatelessWidget {
                 child: Icon(
                   icon != null ? icon! : CupertinoIcons.question,
                   size: 40,
+                  color: Theme.of(context).focusColor,
                 )),
             Expanded(
               child: Text(
                 label != null ? label! : 'Title',
                 style: TextStyle(
-                    fontSize: 20,
-                    color: Theme.of(context).scaffoldBackgroundColor),
+                    fontSize: 20, color: Theme.of(context).focusColor),
                 textAlign: TextAlign.center,
               ),
             )

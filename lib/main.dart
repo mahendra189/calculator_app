@@ -70,7 +70,8 @@ class _CalculatorState extends State<Calculator> {
       home: Scaffold(
         body: screens[_currentScreen],
         drawer: Drawer(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          backgroundColor:
+              _themeMode == ThemeMode.dark ? Colors.grey[900] : Colors.white,
           child: Center(
             child: ListView(
               children: [
@@ -86,8 +87,6 @@ class _CalculatorState extends State<Calculator> {
                     icon: CupertinoIcons.lab_flask,
                     label: "Scientific",
                     onClick: () {}),
-                const Divider(),
-                DrawerItem()
               ],
             ),
           ),
