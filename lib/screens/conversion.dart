@@ -27,10 +27,16 @@ class _ConversionsPage extends State<Conversions> {
   }
 
   void _factorChange(String value) {
-    setState(() {
-      _factor = currentConversionMap![_main.text]![_secondary.text]!;
-    });
+    updateFactor();
     update();
+  }
+
+  void updateFactor() {
+    if (currentConversionMap![_main.text] != null) {
+      setState(() {
+        _factor = currentConversionMap![_main.text]![_secondary.text]!;
+      });
+    }
   }
 
   void changeConversion(String c) {
@@ -38,7 +44,11 @@ class _ConversionsPage extends State<Conversions> {
       setState(() {
         _currentConversion = c;
         currentConversionMap = conversionsMap[c];
+        _input = '';
+        _converted = '';
       });
+      updateFactor();
+      update();
     }
   }
 
@@ -123,9 +133,11 @@ class _ConversionsPage extends State<Conversions> {
                   label: buttonIcon(CupertinoIcons.delete_left),
                   bg: Theme.of(context).canvasColor,
                   onClick: (String value) {
-                    setState(() {
-                      _input = _input.substring(0, _input.length - 1);
-                    });
+                    if (_input.isNotEmpty) {
+                      setState(() {
+                        _input = _input.substring(0, _input.length - 1);
+                      });
+                    }
                     update();
                   }),
             ],
@@ -253,7 +265,7 @@ class _ConversionsPage extends State<Conversions> {
           DropdownMenu(
             initialSelection: currentMap!.keys.first,
             controller: _secondary,
-            dropdownMenuEntries: currentMap!.keys
+            dropdownMenuEntries: currentMap.keys
                 .map((l) => DropdownMenuEntry(value: l, label: l))
                 .toList(),
             onSelected: (value) {
@@ -275,7 +287,7 @@ class _ConversionsPage extends State<Conversions> {
           Padding(
             padding: const EdgeInsets.only(bottom: 13, left: 10, right: 10),
             child: Text(
-              "${currentMap.isNotEmpty && currentMap[_main.text] != null ? currentMap[_main.text]!['unit'] : 'unit'}",
+              "${currentMap.isNotEmpty && currentMap[_secondary.text] != null ? currentMap[_secondary.text]!['unit'] : 'unit'}",
               style:
                   TextStyle(fontSize: 20, color: Theme.of(context).focusColor),
             ),
@@ -291,9 +303,9 @@ class _ConversionsPage extends State<Conversions> {
             onSelected: (String? v) {
               _factorChange(v!);
             },
-            initialSelection: currentMap!.keys.first,
+            initialSelection: currentMap.keys.first,
             controller: _main,
-            dropdownMenuEntries: currentMap!.keys
+            dropdownMenuEntries: currentMap.keys
                 .map((l) => DropdownMenuEntry(value: l, label: l))
                 .toList(),
             inputDecorationTheme:

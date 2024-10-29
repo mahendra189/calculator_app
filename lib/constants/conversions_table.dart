@@ -63,5 +63,67 @@ Map<String, Map<String, dynamic>> conversionsMap = {
       "Kilogrammes": 907.18474,
       "Grams": 907184.74
     }
+  },
+  'Volume': {
+    "Milliliters": {
+      "unit": "mL",
+      "Milliliters": 1,
+      "Liters": pow(10, -3),
+      "CubicMeters": pow(10, -6),
+    },
+    "Liters": {
+      "unit": "L",
+      "Milliliters": 1000,
+      "Liters": 1,
+      "CubicMeters": pow(10, -3),
+    },
+    "CubicMeters": {
+      "unit": "m³",
+      "Milliliters": 1000000,
+      "Liters": 1000,
+      "CubicMeters": 1,
+    }
+  },
+  'Data': {
+    "Bytes": {
+      "unit": "B",
+      "Bytes": 1,
+      "Kilobytes": pow(10, -3),
+      "Megabytes": pow(10, -6),
+      "Gigabytes": pow(10, -9),
+      "Terabytes": pow(10, -12),
+    },
+    "Kilobytes": {
+      "unit": "KB",
+      "Bytes": 1000,
+      "Kilobytes": 1,
+      "Megabytes": pow(10, -3),
+      "Gigabytes": pow(10, -6),
+      "Terabytes": pow(10, -9),
+    },
+    "Megabytes": {
+      "unit": "MB",
+      "Bytes": 1000000,
+      "Kilobytes": 1000,
+      "Megabytes": 1,
+      "Gigabytes": pow(10, -3),
+      "Terabytes": pow(10, -6),
+    },
+    "Gigabytes": {
+      "unit": "GB",
+      "Bytes": 1000000000,
+      "Kilobytes": 1000000,
+      "Megabytes": 1000,
+      "Gigabytes": 1,
+      "Terabytes": pow(10, -3),
+    },
+    "Terabytes": {
+      "unit": "TB",
+      "Bytes": 1000000000000,
+      "Kilobytes": 1000000000,
+      "Megabytes": 1000000,
+      "Gigabytes": 1000,
+      "Terabytes": 1,
+    }
   }
 };
