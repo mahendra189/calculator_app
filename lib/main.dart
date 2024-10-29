@@ -1,6 +1,9 @@
+import 'package:calculator/screens/conversion.dart';
 import 'package:calculator/widgets/calc.dart';
+import 'package:calculator/widgets/drawer_item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/cupertino.dart';
 
 void main() {
   runApp(const Calculator());
@@ -35,6 +38,7 @@ class Calculator extends StatefulWidget {
 
 class _CalculatorState extends State<Calculator> {
   ThemeMode _themeMode = ThemeMode.dark;
+  int _currentScreen = 0;
 
   void toggleTheme() {
     setState(() {
@@ -43,13 +47,52 @@ class _CalculatorState extends State<Calculator> {
     });
   }
 
+  void changeScreen(int newScreen) {
+    setState(() {
+      _currentScreen = newScreen;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final dynamic screens = [
+      Calc(theme: _themeMode, changeTheme: toggleTheme),
+      Conversions(
+        changeScreen: () {
+          changeScreen(0);
+        },
+      )
+    ];
     return MaterialApp(
-        theme: light,
-        darkTheme: dark,
-        themeMode: _themeMode,
-        home:
-            Scaffold(body: Calc(theme: _themeMode, changeTheme: toggleTheme)));
+      theme: light,
+      darkTheme: dark,
+      themeMode: _themeMode,
+      home: Scaffold(
+        body: screens[_currentScreen],
+        drawer: Drawer(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          child: Center(
+            child: ListView(
+              children: [
+                const SizedBox(height: 20),
+                DrawerItem(
+                    icon: CupertinoIcons.chart_bar_square,
+                    label: "Conversions",
+                    onClick: () {
+                      changeScreen(1);
+                    }),
+                const Divider(),
+                DrawerItem(
+                    icon: CupertinoIcons.lab_flask,
+                    label: "Scientific",
+                    onClick: () {}),
+                const Divider(),
+                DrawerItem()
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
