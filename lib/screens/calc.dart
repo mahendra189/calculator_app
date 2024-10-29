@@ -172,6 +172,20 @@ class _CalcScreen extends State<Calc> {
     }
   }
 
+  void handleNegative() {
+    if (!input.startsWith('-')) {
+      setState(() {
+        input = '-$input';
+      });
+    } else {
+      setState(() {
+        input = input.substring(
+          1,
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -266,9 +280,11 @@ class _CalcScreen extends State<Calc> {
                   onClick: backSpace),
               Button(
                   content: "",
-                  label: buttonText("%"),
+                  label: buttonIcon(CupertinoIcons.plus_slash_minus),
                   bg: Theme.of(context).primaryColor,
-                  onClick: onChange),
+                  onClick: (String value) {
+                    handleNegative();
+                  }),
               Button(
                   content: "/",
                   label: buttonIcon(CupertinoIcons.divide),

@@ -1,5 +1,5 @@
 import 'package:calculator/screens/conversion.dart';
-import 'package:calculator/widgets/calc.dart';
+import 'package:calculator/screens/calc.dart';
 import 'package:calculator/widgets/drawer_item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
