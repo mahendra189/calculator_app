@@ -180,7 +180,19 @@ class _CalcScreen extends State<Calc> {
           const SizedBox(
             height: 20,
           ),
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 15),
+              child: GestureDetector(
+                  onTap: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                  child: Icon(
+                    CupertinoIcons.line_horizontal_3,
+                    size: 40,
+                    color: Theme.of(context).focusColor,
+                  )),
+            ),
             Switch(
                 value: widget.theme == ThemeMode.dark,
                 activeColor: Colors.amber,
