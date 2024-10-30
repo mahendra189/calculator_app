@@ -59,31 +59,32 @@ Map<String, IconData> operatorMap = {
 };
 
 class _CalcScreen extends State<Calc> {
-  String input = '';
+  String input = '0';
   String space = '';
   IconData operator = initialIcon;
   double resFont = 50;
 
   void onChange(String value) {
-    // if (input.isNotEmpty) {
-    //   setState(() {
-    //     input += value;
-    //     resFont -= 2;
-    //   });
-    // } else {
-    //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //       content: Text(
-    //     "Length Limit $limitLength!",
-    //   )));
-    // }
-    setState(() {
-      input += value;
-      if (7 < input.length && input.length < 15) {
-        resFont -= 2;
-      } else if (input.length <= 7) {
-        resFont = 50;
-      }
-    });
+    if (input != '0') {
+      setState(() {
+        input += value;
+        if (7 < input.length && input.length < 15) {
+          resFont -= 2;
+        } else if (input.length <= 7) {
+          resFont = 50;
+        }
+      });
+    } else {
+      setState(() {
+        input = '';
+        input += value;
+        if (7 < input.length && input.length < 15) {
+          resFont -= 2;
+        } else if (input.length <= 7) {
+          resFont = 50;
+        }
+      });
+    }
   }
 
   void clearInput(String value) {
@@ -126,7 +127,7 @@ class _CalcScreen extends State<Calc> {
       num eval = operations[operator]!;
       setState(() {
         space = eval.toString();
-        input = '';
+        input = '0';
       });
     } else {
       ScaffoldMessenger.of(context)
@@ -136,7 +137,7 @@ class _CalcScreen extends State<Calc> {
 
   void clear() {
     setState(() {
-      input = '';
+      input = '0';
       space = '';
       operator = initialIcon;
     });
@@ -147,7 +148,7 @@ class _CalcScreen extends State<Calc> {
       setState(() {
         space = input;
         operator = operatorMap[op]!;
-        input = '';
+        input = '0';
       });
     } else if (input.isNotEmpty && space.isNotEmpty) {
       setState(() {
