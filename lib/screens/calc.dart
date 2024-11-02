@@ -230,7 +230,8 @@ class _CalcScreen extends State<Calc> {
 
       // Extract digits
       while (
-          i < eq.length && eq.codeUnitAt(i) >= 48 && eq.codeUnitAt(i) <= 57) {
+          i < eq.length && eq.codeUnitAt(i) >= 48 && eq.codeUnitAt(i) <= 57 ||
+              i < eq.length && eq[i] == '.') {
         i++;
       }
 
