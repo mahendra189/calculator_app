@@ -260,9 +260,9 @@ class _CalcScreen extends State<Calc> {
                     Scaffold.of(context).openDrawer();
                   },
                   child: Icon(
-                    CupertinoIcons.line_horizontal_3,
-                    size: 40,
-                    color: Theme.of(context).focusColor,
+                    CupertinoIcons.list_bullet,
+                    size: 35,
+                    color: Theme.of(context).hintColor,
                   )),
             ),
             Switch(
