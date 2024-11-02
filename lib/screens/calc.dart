@@ -59,11 +59,62 @@ Map<String, IconData> operatorMap = {
 };
 List<String> operators = ['*', '/', '+', '-'];
 
-class _CalcScreen extends State<Calc> {
+class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
   String input = '0';
   String space = '';
   IconData operator = initialIcon;
   double resFont = 40;
+  late AnimationController _controller;
+  late Animation<Offset> _drawerAnimation;
+  late Animation<Offset> _pageAnimation;
+  bool _isDrawerOpen = false;
+  List<String> historyDB = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize the animation controller
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+
+    // Animation for the drawer sliding in from the left
+    _drawerAnimation = Tween<Offset>(
+      begin: Offset(-1.0, 0.0), // Start offscreen to the left
+      end: Offset(0.0, 0.0), // End at normal position
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+
+    // Animation for the main page content moving to the right
+    _pageAnimation = Tween<Offset>(
+      begin: Offset(0.0, 0.0), // Start at normal position
+      end: Offset(0.6, 0.0), // Slide to the right by 60% of screen width
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _toggleDrawer() {
+    setState(() {
+      _isDrawerOpen = !_isDrawerOpen;
+      if (_isDrawerOpen) {
+        _controller.forward(); // Show drawer and slide page to the right
+      } else {
+        _controller.reverse(); // Hide drawer and reset page position
+      }
+    });
+  }
 
   void onChange(String value) {
     if (input != '0') {
@@ -86,7 +137,7 @@ class _CalcScreen extends State<Calc> {
         }
       });
     }
-    evaluate(input);
+    evaluation(input);
   }
 
   void clearInput(String value) {
@@ -94,9 +145,11 @@ class _CalcScreen extends State<Calc> {
   }
 
   void evaluate(String value) {
-    if (input.isNotEmpty) {
-      evaluation(input);
-    }
+    setState(() {
+      historyDB.add("$input=$space");
+      input = space;
+      space = '';
+    });
   }
 
   void evaluateOperand() {
@@ -122,12 +175,11 @@ class _CalcScreen extends State<Calc> {
     setState(() {
       input = '0';
       space = '';
-      operator = initialIcon;
     });
   }
 
   void operatorSwitch(String op) {
-    if (input != '0') {
+    if (input != '0' && input.isNotEmpty) {
       String t = input.substring(0, input.length - 1) + op;
       if (operators.contains(input[input.length - 1])) {
         setState(() {
@@ -239,6 +291,7 @@ class _CalcScreen extends State<Calc> {
       if (t != i) {
         extracted.add(num.parse(eq.substring(t, i))); // Add the complete number
       }
+      continue;
     }
 
     return extracted; // Return the list of extracted numbers and operators
@@ -246,208 +299,215 @@ class _CalcScreen extends State<Calc> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 20,
-          ),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 15),
-              child: GestureDetector(
-                  onTap: () {
-                    Scaffold.of(context).openDrawer();
-                  },
-                  child: Icon(
-                    CupertinoIcons.list_bullet,
-                    size: 35,
-                    color: Theme.of(context).hintColor,
-                  )),
-            ),
-            Switch(
-                value: widget.theme == ThemeMode.dark,
-                activeColor: Colors.amber,
-                inactiveThumbColor: Colors.white,
-                inactiveTrackColor: sideColor,
-                activeTrackColor: Colors.black,
-                splashRadius: 20,
-                trackOutlineColor: const WidgetStatePropertyAll(
-                    Color.fromARGB(139, 255, 255, 255)),
-                onChanged: (bool value) {
-                  widget.changeTheme();
-                }),
-          ]),
-          Expanded(
-            child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
+    return Stack(
+      children: [
+        SlideTransition(position: _drawerAnimation, child: history()),
+        SlideTransition(position: _pageAnimation, child: calcPage()),
+      ],
+    );
+  }
+
+  Widget calcPage() {
+    return Column(children: [
+      const SizedBox(
+        height: 20,
+      ),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 15),
+          child: GestureDetector(
+              onTap: () {
+                _toggleDrawer();
+              },
+              child: Icon(
+                !_isDrawerOpen
+                    ? CupertinoIcons.list_bullet
+                    : CupertinoIcons.multiply,
+                size: 35,
+                color: Theme.of(context).hintColor,
+              )),
+        ),
+        Switch(
+            value: widget.theme == ThemeMode.dark,
+            activeColor: Colors.amber,
+            inactiveThumbColor: Colors.white,
+            inactiveTrackColor: sideColor,
+            activeTrackColor: Colors.black,
+            splashRadius: 20,
+            trackOutlineColor: const WidgetStatePropertyAll(
+                Color.fromARGB(139, 255, 255, 255)),
+            onChanged: (bool value) {
+              widget.changeTheme();
+            }),
+      ]),
+      Expanded(
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                            child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          reverse: true,
-                          child: Text(input,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontSize: 35,
-                                color: Theme.of(context).primaryColor,
-                              )),
-                        ))
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                            child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          reverse: true,
-                          child: Text(space,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontSize: resFont,
-                                color: Theme.of(context).focusColor,
-                              )),
-                        ))
-                      ],
-                    ),
+                    Expanded(
+                        child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      reverse: true,
+                      child: Text(input,
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 35,
+                            color: Theme.of(context).primaryColor,
+                          )),
+                    ))
                   ],
-                )),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Button(
-                  content: "",
-                  label: buttonText("AC"),
-                  bg: Theme.of(context).primaryColor,
-                  onClick: clearInput),
-              Button(
-                  content: "",
-                  label: buttonIcon(CupertinoIcons.delete_left),
-                  bg: Theme.of(context).primaryColor,
-                  onClick: backSpace),
-              Button(
-                  content: "",
-                  label: buttonIcon(CupertinoIcons.plus_slash_minus),
-                  bg: Theme.of(context).primaryColor,
-                  onClick: (String value) {
-                    handleNegative();
-                  }),
-              Button(
-                  content: "/",
-                  label: buttonIcon(CupertinoIcons.divide),
-                  bg: Theme.of(context).hintColor,
-                  onClick: operatorSwitch),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Button(
-                  content: "7",
-                  label: buttonText("7"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "8",
-                  label: buttonText("8"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "9",
-                  label: buttonText("9"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "*",
-                  label: buttonIcon(CupertinoIcons.multiply),
-                  bg: Theme.of(context).hintColor,
-                  onClick: operatorSwitch),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Button(
-                  content: "4",
-                  label: buttonText("4"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "5",
-                  label: buttonText("5"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "6",
-                  label: buttonText("6"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "-",
-                  label: buttonIcon(CupertinoIcons.minus),
-                  bg: Theme.of(context).hintColor,
-                  onClick: operatorSwitch),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Button(
-                  content: "1",
-                  label: buttonText("1"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "2",
-                  label: buttonText("2"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "3",
-                  label: buttonText("3"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "+",
-                  label: buttonIcon(CupertinoIcons.add),
-                  bg: Theme.of(context).hintColor,
-                  onClick: operatorSwitch)
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Button(
-                  content: "",
-                  label: buttonIcon(Icons.calculate_rounded),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "0",
-                  label: buttonText("0"),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: ".",
-                  label: buttonText("."),
-                  bg: Theme.of(context).canvasColor,
-                  onClick: onChange),
-              Button(
-                  content: "",
-                  label: buttonIcon(CupertinoIcons.equal),
-                  bg: Theme.of(context).hintColor,
-                  onClick: evaluate)
-            ],
-          ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                        child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      reverse: true,
+                      child: Text(space,
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: resFont,
+                            color: Theme.of(context).focusColor,
+                          )),
+                    ))
+                  ],
+                ),
+              ],
+            )),
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Button(
+              content: "",
+              label: buttonText("AC"),
+              bg: Theme.of(context).primaryColor,
+              onClick: clearInput),
+          Button(
+              content: "",
+              label: buttonIcon(CupertinoIcons.delete_left),
+              bg: Theme.of(context).primaryColor,
+              onClick: backSpace),
+          Button(
+              content: "",
+              label: buttonIcon(CupertinoIcons.plus_slash_minus),
+              bg: Theme.of(context).primaryColor,
+              onClick: (String value) {
+                handleNegative();
+              }),
+          Button(
+              content: "/",
+              label: buttonIcon(CupertinoIcons.divide),
+              bg: Theme.of(context).hintColor,
+              onClick: operatorSwitch),
         ],
       ),
-    );
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Button(
+              content: "7",
+              label: buttonText("7"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "8",
+              label: buttonText("8"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "9",
+              label: buttonText("9"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "*",
+              label: buttonIcon(CupertinoIcons.multiply),
+              bg: Theme.of(context).hintColor,
+              onClick: operatorSwitch),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Button(
+              content: "4",
+              label: buttonText("4"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "5",
+              label: buttonText("5"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "6",
+              label: buttonText("6"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "-",
+              label: buttonIcon(CupertinoIcons.minus),
+              bg: Theme.of(context).hintColor,
+              onClick: operatorSwitch),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Button(
+              content: "1",
+              label: buttonText("1"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "2",
+              label: buttonText("2"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "3",
+              label: buttonText("3"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "+",
+              label: buttonIcon(CupertinoIcons.add),
+              bg: Theme.of(context).hintColor,
+              onClick: operatorSwitch)
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Button(
+              content: "",
+              label: buttonIcon(Icons.calculate_rounded),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "0",
+              label: buttonText("0"),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: ".",
+              label: buttonText("."),
+              bg: Theme.of(context).canvasColor,
+              onClick: onChange),
+          Button(
+              content: "",
+              label: buttonIcon(CupertinoIcons.equal),
+              bg: Theme.of(context).hintColor,
+              onClick: evaluate)
+        ],
+      ),
+    ]);
   }
 
   Widget buttonText(String label) {
@@ -461,17 +521,49 @@ class _CalcScreen extends State<Calc> {
     return Icon(icon, color: Theme.of(context).focusColor, size: 40);
   }
 
-  List<TextSpan> _getHighlightedSpans(String text) {
-    List<TextSpan> spans = [];
-    for (int i = 0; i < text.length; i++) {
-      if (operators.contains(text[i])) {
-        spans.add(TextSpan(
-            text: text[i],
-            style: TextStyle(color: Theme.of(context).hintColor)));
-      } else {
-        spans.add(TextSpan(text: text[i]));
-      }
-    }
-    return spans;
+  Widget history() {
+    return Container(
+      width: 225.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(height: 50),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    historyDB = [];
+                  });
+                },
+                child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    decoration: BoxDecoration(
+                        color: Theme.of(context).hintColor,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Text("Delete All",
+                        style: TextStyle(color: Theme.of(context).focusColor))),
+              )
+            ],
+          ),
+          const Divider(),
+          ...historyDB.map((e) => ListTile(
+              title: Text(
+                e,
+                style: TextStyle(color: Theme.of(context).focusColor),
+              ),
+              onTap: () {
+                _toggleDrawer();
+                setState(() {
+                  input = e.split('=')[0];
+                });
+                // evaluation(input);
+                // Navigate to Home or other logic
+              })),
+        ],
+      ),
+    );
   }
 }
