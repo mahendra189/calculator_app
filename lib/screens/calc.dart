@@ -2,7 +2,8 @@ import 'package:calculator/screens/conversion.dart';
 import 'package:calculator/widgets/button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class Calc extends StatefulWidget {
   final Function changeTheme;
@@ -21,43 +22,6 @@ Map<String, Color> darkTheme = {
   'btn_fg': Colors.white,
 };
 
-Map<String, Color> lightTheme = {
-  'background': Colors.white,
-  'homeRow': Colors.black54,
-  'sideRow': Colors.orange,
-  'btn_bg': Colors.black38,
-  'btn_fg': Colors.black87,
-};
-
-ThemeData light = ThemeData(
-    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
-    useMaterial3: true,
-    primaryColor: Colors.white54,
-    hintColor: Colors.orange,
-    canvasColor: Colors.black38,
-    focusColor: Colors.black87,
-    scaffoldBackgroundColor: Colors.white);
-
-ThemeData dark = ThemeData(
-    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
-    useMaterial3: true,
-    primaryColor: Colors.white30,
-    hintColor: Colors.orange,
-    canvasColor: Colors.white10,
-    focusColor: Colors.white,
-    scaffoldBackgroundColor: Colors.white);
-
-Color numColor = Colors.white10;
-Color homeRowColor = Colors.white30;
-Color sideColor = Colors.orange;
-const int limitLength = 7;
-const initialIcon = CupertinoIcons.check_mark_circled_solid;
-Map<String, IconData> operatorMap = {
-  '+': CupertinoIcons.add_circled_solid,
-  '-': CupertinoIcons.minus_circle_fill,
-  'X': CupertinoIcons.multiply_circle_fill,
-  '/': CupertinoIcons.divide_circle_fill
-};
 List<String> operators = ['*', '/', '+', '-'];
 
 class _CalcScreen extends State<Calc> with TickerProviderStateMixin {
@@ -73,10 +37,33 @@ class _CalcScreen extends State<Calc> with TickerProviderStateMixin {
   List<String> historyDB = [];
   bool _isMenuOpen = false;
 
+  // pref to the storage
+  Future<void> saveList(List<String> items) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String jsonString = jsonEncode(items); // Convert list to JSON string
+    await prefs.setString('history', jsonString); // Save the string
+  }
+
+  Future<List<String>> loadList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('history'); // Get the string
+    if (jsonString != null) {
+      List<String> items = List<String>.from(
+          jsonDecode(jsonString)); // Convert JSON string to list
+      return items;
+    }
+    return []; // Return an empty list if no data found
+  }
+
+  void _loadHistory() async {
+    historyDB = await loadList();
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
-
+    _loadHistory();
     // Initialize the animation controller
     _controller = AnimationController(
       vsync: this,
@@ -119,6 +106,7 @@ class _CalcScreen extends State<Calc> with TickerProviderStateMixin {
   @override
   void dispose() {
     _controller.dispose();
+    _menuController.dispose();
     super.dispose();
   }
 
@@ -167,6 +155,7 @@ class _CalcScreen extends State<Calc> with TickerProviderStateMixin {
         !operators.contains(input[input.length - 1])) {
       setState(() {
         historyDB.add("$input=$space");
+        saveList(historyDB);
         input = space;
         space = '';
       });
@@ -361,7 +350,7 @@ class _CalcScreen extends State<Calc> with TickerProviderStateMixin {
             value: widget.theme == ThemeMode.dark,
             activeColor: Colors.amber,
             inactiveThumbColor: Colors.white,
-            inactiveTrackColor: sideColor,
+            inactiveTrackColor: Colors.orange,
             activeTrackColor: Colors.black,
             splashRadius: 20,
             trackOutlineColor: const WidgetStatePropertyAll(
@@ -574,6 +563,7 @@ class _CalcScreen extends State<Calc> with TickerProviderStateMixin {
                   setState(() {
                     historyDB = [];
                   });
+                  saveList([]);
                 },
                 child: Container(
                     height: 40,
