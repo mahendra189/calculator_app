@@ -77,13 +77,13 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
     // Initialize the animation controller
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
     );
 
     // Animation for the drawer sliding in from the left
     _drawerAnimation = Tween<Offset>(
-      begin: Offset(-1.0, 0.0), // Start offscreen to the left
-      end: Offset(0.0, 0.0), // End at normal position
+      begin: const Offset(-1.0, 0.0), // Start offscreen to the left
+      end: const Offset(0.0, 0.0), // End at normal position
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
@@ -91,8 +91,8 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
 
     // Animation for the main page content moving to the right
     _pageAnimation = Tween<Offset>(
-      begin: Offset(0.0, 0.0), // Start at normal position
-      end: Offset(0.6, 0.0), // Slide to the right by 60% of screen width
+      begin: const Offset(0.0, 0.0), // Start at normal position
+      end: const Offset(0.6, 0.0), // Slide to the right by 60% of screen width
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
