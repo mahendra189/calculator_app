@@ -145,11 +145,13 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
   }
 
   void evaluate(String value) {
-    setState(() {
-      historyDB.add("$input=$space");
-      input = space;
-      space = '';
-    });
+    if (space.isNotEmpty) {
+      setState(() {
+        historyDB.add("$input=$space");
+        input = space;
+        space = '';
+      });
+    }
   }
 
   void evaluateOperand() {
@@ -549,19 +551,48 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
             ],
           ),
           const Divider(),
-          ...historyDB.map((e) => ListTile(
-              title: Text(
-                e,
-                style: TextStyle(color: Theme.of(context).focusColor),
-              ),
-              onTap: () {
-                _toggleDrawer();
-                setState(() {
-                  input = e.split('=')[0];
-                });
-                // evaluation(input);
-                // Navigate to Home or other logic
-              })),
+          ...historyDB.map(
+            (e) {
+              List<dynamic> split = e.split('=');
+              return ListTile(
+                title: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                        fontSize: 25, color: Theme.of(context).focusColor),
+                    children: [
+                      TextSpan(text: split[0]),
+                      const TextSpan(text: '='),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4.0, vertical: 2.0),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).hintColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(7.0),
+                          ),
+                          child: Text(
+                            split[1],
+                            style: TextStyle(
+                              color: Theme.of(context).hintColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                onTap: () {
+                  _toggleDrawer();
+                  setState(() {
+                    input = e.split('=')[0];
+                  });
+                  // evaluation(input);
+                  // Navigate to Home or other logic
+                },
+              );
+            },
+          ),
         ],
       ),
     );
