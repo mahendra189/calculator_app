@@ -196,9 +196,13 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
   }
 
   void backSpace(String value) {
-    if (input.isNotEmpty) {
+    if (input.length > 1) {
       setState(() {
         input = input.substring(0, input.length - 1);
+      });
+    } else {
+      setState(() {
+        input = '0';
       });
     }
   }
