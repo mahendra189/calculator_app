@@ -132,7 +132,7 @@ class _ConversionsPage extends State<Conversions> {
               Button(
                   content: "",
                   label: buttonIcon(CupertinoIcons.delete_left),
-                  bg: Theme.of(context).canvasColor,
+                  bg: Theme.of(context).hintColor,
                   onClick: (String value) {
                     if (_input.isNotEmpty) {
                       setState(() {
@@ -238,10 +238,15 @@ class _ConversionsPage extends State<Conversions> {
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
           margin: const EdgeInsets.symmetric(horizontal: 5),
           decoration: BoxDecoration(
-              color:
-                  active! ? Theme.of(context).canvasColor : Colors.transparent,
+              color: active! ? Theme.of(context).hintColor : Colors.transparent,
               borderRadius: const BorderRadius.all(Radius.circular(30))),
-          child: Text(title),
+          child: Text(
+            title,
+            style: TextStyle(
+                color: active
+                    ? Theme.of(context).scaffoldBackgroundColor
+                    : Theme.of(context).focusColor),
+          ),
         ));
   }
 
@@ -254,6 +259,17 @@ class _ConversionsPage extends State<Conversions> {
 
   Widget buttonIcon(IconData icon) {
     return Icon(icon, color: Theme.of(context).focusColor, size: 40);
+  }
+
+  double getFontSize(String input) {
+    Map<int, int> sizeMap = {10: 45, 15: 35, 25: 30};
+    int le = input.length;
+    for (var v in sizeMap.entries) {
+      if (v.key < le) {
+        return v.value.toDouble();
+      }
+    }
+    return sizeMap[10]!.toDouble();
   }
 
   Widget currentConversion(Map<String, dynamic>? currentMap) {
@@ -281,9 +297,17 @@ class _ConversionsPage extends State<Conversions> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            _converted,
-            style: TextStyle(color: Theme.of(context).focusColor, fontSize: 45),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              reverse: true,
+              child: Text(
+                _converted,
+                style: TextStyle(
+                    color: Theme.of(context).focusColor,
+                    fontSize: getFontSize(_converted)),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 13, left: 10, right: 10),
@@ -318,9 +342,17 @@ class _ConversionsPage extends State<Conversions> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            _input,
-            style: TextStyle(color: Theme.of(context).focusColor, fontSize: 45),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              reverse: true,
+              child: Text(
+                _input,
+                style: TextStyle(
+                    color: Theme.of(context).focusColor,
+                    fontSize: getFontSize(_input)),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 13, left: 10, right: 10),
