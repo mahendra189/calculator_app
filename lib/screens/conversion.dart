@@ -71,17 +71,18 @@ class _ConversionsPage extends State<Conversions> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Theme.of(context).focusColor),
         title: Row(
           children: [
-            IconButton(
-                onPressed: () {
-                  widget.changeScreen!();
-                },
-                icon: Icon(
-                  Icons.arrow_back,
-                  size: 25,
-                  color: Theme.of(context).focusColor,
-                )),
+            // IconButton(
+            //     onPressed: () {
+            //       widget.changeScreen!();
+            //     },
+            //     icon: Icon(
+            //       Icons.arrow_back,
+            //       size: 25,
+            //       color: Theme.of(context).focusColor,
+            //     )),
             Text(
               "Conversions",
               style: TextStyle(color: Theme.of(context).focusColor),

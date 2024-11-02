@@ -1,7 +1,9 @@
+import 'package:calculator/screens/conversion.dart';
 import 'package:calculator/widgets/button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 
 class Calc extends StatefulWidget {
   final Function changeTheme;
@@ -69,6 +71,7 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
   late Animation<Offset> _pageAnimation;
   bool _isDrawerOpen = false;
   List<String> historyDB = [];
+  bool _isMenuOpen = false;
 
   @override
   void initState() {
@@ -145,7 +148,9 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
   }
 
   void evaluate(String value) {
-    if (space.isNotEmpty) {
+    if (input.isNotEmpty &&
+        space.isNotEmpty &&
+        !operators.contains(input[input.length - 1])) {
       setState(() {
         historyDB.add("$input=$space");
         input = space;
@@ -223,44 +228,46 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
 
   // evaluation function
   void evaluation(String eq) {
-    int v = eq.codeUnitAt(eq.length - 1);
-    if (v >= 48 && v <= 57 && operators.any((e) => eq.contains(e))) {
-      List<dynamic> sep = _extract(eq);
-      List<String> op = ['*', '/'];
-      while (sep.contains(op[0]) || sep.contains(op[1])) {
-        int li = getIndex(sep, op[0]);
-        int ri = getIndex(sep, op[1]);
-        if (li < ri) {
-          num a = sep[li - 1];
-          num b = sep[li + 1];
-          num result = a * b;
-          sep.replaceRange(li - 1, li + 2, [result]);
-        } else {
-          num a = sep[ri - 1];
-          num b = sep[ri + 1];
-          num result = a / b;
-          sep.replaceRange(ri - 1, ri + 2, [result]);
+    if (eq.isNotEmpty) {
+      int v = eq.codeUnitAt(eq.length - 1);
+      if (v >= 48 && v <= 57 && operators.any((e) => eq.contains(e))) {
+        List<dynamic> sep = _extract(eq);
+        List<String> op = ['*', '/'];
+        while (sep.contains(op[0]) || sep.contains(op[1])) {
+          int li = getIndex(sep, op[0]);
+          int ri = getIndex(sep, op[1]);
+          if (li < ri) {
+            num a = sep[li - 1];
+            num b = sep[li + 1];
+            num result = a * b;
+            sep.replaceRange(li - 1, li + 2, [result]);
+          } else {
+            num a = sep[ri - 1];
+            num b = sep[ri + 1];
+            num result = a / b;
+            sep.replaceRange(ri - 1, ri + 2, [result]);
+          }
         }
-      }
-      op = ['+', '-'];
-      while (sep.contains(op[0]) || sep.contains(op[1])) {
-        int li = getIndex(sep, op[0]);
-        int ri = getIndex(sep, op[1]);
-        if (li < ri) {
-          num a = sep[li - 1];
-          num b = sep[li + 1];
-          num result = a + b;
-          sep.replaceRange(li - 1, li + 2, [result]);
-        } else {
-          num a = sep[ri - 1];
-          num b = sep[ri + 1];
-          num result = a - b;
-          sep.replaceRange(ri - 1, ri + 2, [result]);
+        op = ['+', '-'];
+        while (sep.contains(op[0]) || sep.contains(op[1])) {
+          int li = getIndex(sep, op[0]);
+          int ri = getIndex(sep, op[1]);
+          if (li < ri) {
+            num a = sep[li - 1];
+            num b = sep[li + 1];
+            num result = a + b;
+            sep.replaceRange(li - 1, li + 2, [result]);
+          } else {
+            num a = sep[ri - 1];
+            num b = sep[ri + 1];
+            num result = a - b;
+            sep.replaceRange(ri - 1, ri + 2, [result]);
+          }
         }
+        setState(() {
+          space = sep[0].toString();
+        });
       }
-      setState(() {
-        space = sep[0].toString();
-      });
     }
   }
 
@@ -309,6 +316,19 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
       children: [
         SlideTransition(position: _drawerAnimation, child: history()),
         SlideTransition(position: _pageAnimation, child: calcPage()),
+        _isMenuOpen
+            ? GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isMenuOpen = false;
+                  });
+                },
+                child: Container(
+                  color: Colors.black
+                      .withOpacity(0.8), // Semi-transparent overlay color
+                ))
+            : const SizedBox.shrink(),
+        _isMenuOpen ? calcMenu() : const SizedBox.shrink()
       ],
     );
   }
@@ -495,7 +515,11 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
               content: "",
               label: buttonIcon(Icons.calculate_rounded),
               bg: Theme.of(context).canvasColor,
-              onClick: onChange),
+              onClick: (String value) {
+                setState(() {
+                  _isMenuOpen = true;
+                });
+              }),
           Button(
               content: "0",
               label: buttonText("0"),
@@ -533,7 +557,7 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(height: 50),
+          const SizedBox(height: 50),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -598,6 +622,55 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget calcMenu() {
+    return Positioned(
+      bottom: 10,
+      left: 20,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(width: 0.2, color: Theme.of(context).focusColor),
+        ),
+        width: 225,
+        height: 170,
+        alignment: const Alignment(10, 10),
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            ListTile(
+              onTap: () {
+                Future.microtask(() {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Conversions()),
+                  );
+                });
+                setState(() {
+                  _isMenuOpen = false;
+                });
+              },
+              leading: Icon(
+                CupertinoIcons.chart_bar_square,
+                color: Theme.of(context).focusColor,
+              ),
+              title: Text("Conversions",
+                  style: TextStyle(color: Theme.of(context).focusColor)),
+            ),
+            ListTile(
+              leading: Icon(
+                CupertinoIcons.lab_flask,
+                color: Theme.of(context).focusColor,
+              ),
+              title: Text("Scientific",
+                  style: TextStyle(color: Theme.of(context).focusColor)),
+            ),
+          ],
+        ),
       ),
     );
   }
