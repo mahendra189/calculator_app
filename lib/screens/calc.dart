@@ -3,7 +3,6 @@ import 'package:calculator/widgets/button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
 
 class Calc extends StatefulWidget {
   final Function changeTheme;
@@ -61,14 +60,15 @@ Map<String, IconData> operatorMap = {
 };
 List<String> operators = ['*', '/', '+', '-'];
 
-class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
+class _CalcScreen extends State<Calc> with TickerProviderStateMixin {
   String input = '0';
   String space = '';
-  IconData operator = initialIcon;
   double resFont = 40;
   late AnimationController _controller;
+  late AnimationController _menuController;
   late Animation<Offset> _drawerAnimation;
   late Animation<Offset> _pageAnimation;
+  late Animation<Offset> _menuAnimation;
   bool _isDrawerOpen = false;
   List<String> historyDB = [];
   bool _isMenuOpen = false;
@@ -79,6 +79,10 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
 
     // Initialize the animation controller
     _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _menuController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
@@ -100,6 +104,16 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
       parent: _controller,
       curve: Curves.easeInOut,
     ));
+
+    _menuAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 1.0), // Start offscreen at the bottom
+      end: const Offset(0.0, 0.0), // End at normal position at the bottom
+    ).animate(
+      CurvedAnimation(
+        parent: _menuController,
+        curve: Curves.bounceIn,
+      ),
+    );
   }
 
   @override
@@ -156,25 +170,6 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
         input = space;
         space = '';
       });
-    }
-  }
-
-  void evaluateOperand() {
-    if (input != '') {
-      Map<IconData, num> operations = {
-        operatorMap['+']!: num.parse(space) + num.parse(input),
-        operatorMap['-']!: num.parse(space) - num.parse(input),
-        operatorMap['X']!: num.parse(space) * num.parse(input),
-        operatorMap['/']!: num.parse(space) / num.parse(input),
-      };
-      num eval = operations[operator]!;
-      setState(() {
-        space = eval.toString();
-        input = '0';
-      });
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Enter Number!")));
     }
   }
 
@@ -319,6 +314,7 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
         _isMenuOpen
             ? GestureDetector(
                 onTap: () {
+                  _menuController.reverse();
                   setState(() {
                     _isMenuOpen = false;
                   });
@@ -326,9 +322,17 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
                 child: Container(
                   color: Colors.black
                       .withOpacity(0.8), // Semi-transparent overlay color
-                ))
+                ),
+              )
             : const SizedBox.shrink(),
-        _isMenuOpen ? calcMenu() : const SizedBox.shrink()
+        Positioned(
+          bottom: 10, // Adjust bottom padding as desired
+          left: 20, // Adjust left padding if necessary
+          child: SlideTransition(
+            position: _menuAnimation,
+            child: _isMenuOpen ? calcMenu() : const SizedBox.shrink(),
+          ),
+        ),
       ],
     );
   }
@@ -516,9 +520,13 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
               label: buttonIcon(Icons.calculate_rounded),
               bg: Theme.of(context).canvasColor,
               onClick: (String value) {
+                if (_isDrawerOpen) {
+                  _toggleDrawer();
+                }
                 setState(() {
                   _isMenuOpen = true;
                 });
+                _menuController.forward();
               }),
           Button(
               content: "0",
@@ -568,6 +576,7 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
                   });
                 },
                 child: Container(
+                    height: 40,
                     padding:
                         const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     decoration: BoxDecoration(
@@ -579,6 +588,23 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
             ],
           ),
           const Divider(),
+          historyDB.isEmpty
+              ? Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          CupertinoIcons.clock,
+                          color: Theme.of(context).focusColor,
+                          size: 30,
+                        ),
+                        const Text("No History")
+                      ],
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
           ...historyDB.map(
             (e) {
               List<dynamic> split = e.split('=');
@@ -627,50 +653,50 @@ class _CalcScreen extends State<Calc> with SingleTickerProviderStateMixin {
   }
 
   Widget calcMenu() {
-    return Positioned(
-      bottom: 10,
-      left: 20,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(width: 0.2, color: Theme.of(context).focusColor),
-        ),
-        width: 225,
-        height: 170,
-        alignment: const Alignment(10, 10),
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            ListTile(
-              onTap: () {
-                Future.microtask(() {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Conversions()),
-                  );
-                });
-                setState(() {
-                  _isMenuOpen = false;
-                });
-              },
-              leading: Icon(
-                CupertinoIcons.chart_bar_square,
-                color: Theme.of(context).focusColor,
-              ),
-              title: Text("Conversions",
-                  style: TextStyle(color: Theme.of(context).focusColor)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(width: 0.2, color: Theme.of(context).focusColor),
+      ),
+      width: 225,
+      height: 170,
+      alignment: const Alignment(10, 10),
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: () {
+              Future.microtask(() {
+                Navigator.push(
+                  // ignore: use_build_context_synchronously
+                  context,
+                  MaterialPageRoute(builder: (context) => const Conversions()),
+                );
+              });
+              if (_isDrawerOpen) {
+                _toggleDrawer();
+              }
+              setState(() {
+                _isMenuOpen = false;
+              });
+            },
+            leading: Icon(
+              CupertinoIcons.chart_bar_square,
+              color: Theme.of(context).focusColor,
             ),
-            ListTile(
-              leading: Icon(
-                CupertinoIcons.lab_flask,
-                color: Theme.of(context).focusColor,
-              ),
-              title: Text("Scientific",
-                  style: TextStyle(color: Theme.of(context).focusColor)),
+            title: Text("Conversions",
+                style: TextStyle(color: Theme.of(context).focusColor)),
+          ),
+          ListTile(
+            leading: Icon(
+              CupertinoIcons.lab_flask,
+              color: Theme.of(context).focusColor,
             ),
-          ],
-        ),
+            title: Text("Scientific",
+                style: TextStyle(color: Theme.of(context).focusColor)),
+          ),
+        ],
       ),
     );
   }
