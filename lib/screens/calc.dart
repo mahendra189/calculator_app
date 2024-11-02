@@ -57,12 +57,13 @@ Map<String, IconData> operatorMap = {
   'X': CupertinoIcons.multiply_circle_fill,
   '/': CupertinoIcons.divide_circle_fill
 };
+List<String> operators = ['*', '/', '+', '-'];
 
 class _CalcScreen extends State<Calc> {
   String input = '0';
   String space = '';
   IconData operator = initialIcon;
-  double resFont = 50;
+  double resFont = 40;
 
   void onChange(String value) {
     if (input != '0') {
@@ -71,7 +72,7 @@ class _CalcScreen extends State<Calc> {
         if (7 < input.length && input.length < 15) {
           resFont -= 2;
         } else if (input.length <= 7) {
-          resFont = 50;
+          resFont = 40;
         }
       });
     } else {
@@ -81,10 +82,11 @@ class _CalcScreen extends State<Calc> {
         if (7 < input.length && input.length < 15) {
           resFont -= 2;
         } else if (input.length <= 7) {
-          resFont = 50;
+          resFont = 40;
         }
       });
     }
+    evaluate(input);
   }
 
   void clearInput(String value) {
@@ -92,27 +94,8 @@ class _CalcScreen extends State<Calc> {
   }
 
   void evaluate(String value) {
-    if (input != '' && operator != initialIcon) {
-      Map<IconData, num> operations = {
-        operatorMap['+']!: num.parse(space) + num.parse(input),
-        operatorMap['-']!: num.parse(space) - num.parse(input),
-        operatorMap['X']!: num.parse(space) * num.parse(input),
-        operatorMap['/']!: num.parse(space) / num.parse(input),
-      };
-      num eval = operations[operator]!;
-      setState(() {
-        space = '';
-        input = eval.toString();
-        operator = CupertinoIcons.equal_circle_fill;
-      });
-    } else if (input.isEmpty && space.isNotEmpty) {
-      setState(() {
-        input = space;
-        space = '';
-      });
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Enter Number!")));
+    if (input.isNotEmpty) {
+      evaluation(input);
     }
   }
 
@@ -144,24 +127,17 @@ class _CalcScreen extends State<Calc> {
   }
 
   void operatorSwitch(String op) {
-    if (input.isNotEmpty && space.isEmpty) {
-      setState(() {
-        space = input;
-        operator = operatorMap[op]!;
-        input = '0';
-      });
-    } else if (input.isNotEmpty && space.isNotEmpty) {
-      setState(() {
-        operator = operatorMap[op]!;
-      });
-      evaluateOperand();
-    } else if (input.isEmpty && space.isNotEmpty) {
-      setState(() {
-        operator = operatorMap[op]!;
-      });
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Enter Number!")));
+    if (input != '0') {
+      String t = input.substring(0, input.length - 1) + op;
+      if (operators.contains(input[input.length - 1])) {
+        setState(() {
+          input = t;
+        });
+      } else {
+        setState(() {
+          input += op;
+        });
+      }
     }
   }
 
@@ -185,6 +161,86 @@ class _CalcScreen extends State<Calc> {
         );
       });
     }
+  }
+
+  // evaluation function
+  void evaluation(String eq) {
+    int v = eq.codeUnitAt(eq.length - 1);
+    if (v >= 48 && v <= 57 && operators.any((e) => eq.contains(e))) {
+      List<dynamic> sep = _extract(eq);
+      List<String> op = ['*', '/'];
+      while (sep.contains(op[0]) || sep.contains(op[1])) {
+        int li = getIndex(sep, op[0]);
+        int ri = getIndex(sep, op[1]);
+        if (li < ri) {
+          num a = sep[li - 1];
+          num b = sep[li + 1];
+          num result = a * b;
+          sep.replaceRange(li - 1, li + 2, [result]);
+        } else {
+          num a = sep[ri - 1];
+          num b = sep[ri + 1];
+          num result = a / b;
+          sep.replaceRange(ri - 1, ri + 2, [result]);
+        }
+      }
+      op = ['+', '-'];
+      while (sep.contains(op[0]) || sep.contains(op[1])) {
+        int li = getIndex(sep, op[0]);
+        int ri = getIndex(sep, op[1]);
+        if (li < ri) {
+          num a = sep[li - 1];
+          num b = sep[li + 1];
+          num result = a + b;
+          sep.replaceRange(li - 1, li + 2, [result]);
+        } else {
+          num a = sep[ri - 1];
+          num b = sep[ri + 1];
+          num result = a - b;
+          sep.replaceRange(ri - 1, ri + 2, [result]);
+        }
+      }
+      setState(() {
+        space = sep[0].toString();
+      });
+    }
+  }
+
+  int getIndex(List<dynamic> arr, String char) {
+    int idx = arr.indexOf(char);
+    return idx != -1 ? idx : arr.length;
+  }
+
+  List<dynamic> _extract(String eq) {
+    List<dynamic> extracted = [];
+    int i = 0;
+
+    while (i < eq.length) {
+      // Skip whitespace
+
+      // Check for a sign or operator
+      if (i < eq.length &&
+          (eq[i] == '+' || eq[i] == '-' || eq[i] == '*' || eq[i] == '/')) {
+        extracted.add(eq[i]); // Add the operator to the list
+        i++; // Move to the next character
+        continue; // Skip to the next iteration to avoid re-processing spaces
+      }
+
+      int t = i;
+
+      // Extract digits
+      while (
+          i < eq.length && eq.codeUnitAt(i) >= 48 && eq.codeUnitAt(i) <= 57) {
+        i++;
+      }
+
+      // If we found a number, parse and add it to the list
+      if (t != i) {
+        extracted.add(num.parse(eq.substring(t, i))); // Add the complete number
+      }
+    }
+
+    return extracted; // Return the list of extracted numbers and operators
   }
 
   @override
@@ -233,10 +289,10 @@ class _CalcScreen extends State<Calc> {
                             child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           reverse: true,
-                          child: Text(space,
+                          child: Text(input,
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                fontSize: 30,
+                                fontSize: 35,
                                 color: Theme.of(context).primaryColor,
                               )),
                         ))
@@ -245,16 +301,11 @@ class _CalcScreen extends State<Calc> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                          operator,
-                          color: Theme.of(context).focusColor,
-                          size: 50,
-                        ),
                         Expanded(
                             child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           reverse: true,
-                          child: Text(input,
+                          child: Text(space,
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                 fontSize: resFont,
@@ -312,7 +363,7 @@ class _CalcScreen extends State<Calc> {
                   bg: Theme.of(context).canvasColor,
                   onClick: onChange),
               Button(
-                  content: "X",
+                  content: "*",
                   label: buttonIcon(CupertinoIcons.multiply),
                   bg: Theme.of(context).hintColor,
                   onClick: operatorSwitch),
@@ -407,5 +458,19 @@ class _CalcScreen extends State<Calc> {
 
   Widget buttonIcon(IconData icon) {
     return Icon(icon, color: Theme.of(context).focusColor, size: 40);
+  }
+
+  List<TextSpan> _getHighlightedSpans(String text) {
+    List<TextSpan> spans = [];
+    for (int i = 0; i < text.length; i++) {
+      if (operators.contains(text[i])) {
+        spans.add(TextSpan(
+            text: text[i],
+            style: TextStyle(color: Theme.of(context).hintColor)));
+      } else {
+        spans.add(TextSpan(text: text[i]));
+      }
+    }
+    return spans;
   }
 }
